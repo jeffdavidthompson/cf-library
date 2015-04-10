@@ -11,26 +11,25 @@ function book(title,author) {
   //Taking a book off the shelf will simply return it to the book cart.
   //We could search for the book first rather than requiring the starting
   //shelf, but it seems like a good precaution to require the location.
-  this.add = function(startShelf){
-    startShelf.bookstock.splice(startShelf.bookstock.indexOf(this),1);
-    cart.bookstock.push(this);
   };
-  this.remove = function(shelf) {
-    //For this one we have to check if it's on the book cart first
-    if (cart.bookstock.indexOf(this) != -1) {
-      shelf.bookstock.push(this);
-    };
-  };
-};
 
 function shelf(name){
   //this would be the name of the shelf, probably a genre like Mystery
   this.name = name;
   //initialize an empty array which will hold books
   this.bookstock = [];
-  //this will allow add/remove books from the shelf
+  //books can't come from a void, they must start on another shelf
+  this.add = function(book,originShelf){
+    if (originShelf.bookstock.indexOf(book) != 1){
+      originShelf.bookstock.splice(originShelf.bookstock.indexOf(book),1);
+      this.bookstock.push(book);
+    }
+  }
   this.remove = function(book){
-
+    if (this.bookstock.indexOf(book) != 1){
+      this.bookstock.splice(this.bookstock.indexOf(book),1);
+      cart.bookstock.push(book);
+    }
   }
   //this will allow reports describing the books on the shelf
   this.report = function() {
@@ -96,7 +95,7 @@ function librarySystem(name){
 
 //add some books
 var illiad = new book("The Illiad","Homer");
-var oddysey = new book("The Oddysey","Homer");
+var odyssey = new book("The Odysey","Homer");
 var scarlet = new book("A Study in Scarlet","Arthur Conan Doyle");
 
 //add some shelves
@@ -113,9 +112,7 @@ var mainStreetLibrary = new branch("Main Street Library");
 //add the library system that contains the branches
 var spl = new librarySystem("Seattle Public Library System");
 
-//
-//now we can say how we want everything held and arranged
-//
+//This is the initial setup, laying out how the
 
 spl.libraries.push(mainStreetLibrary);
 spl.libraries.push(archive)
@@ -126,9 +123,15 @@ mainStreetLibrary.shelves.push(mystery);
 archive.shelves.push(cart);
 
 classics.bookstock.push(illiad);
-classics.bookstock.push(oddysey);
+mystery.bookstock.push(odyssey);
 mystery.bookstock.push(scarlet);
 
-mainStreetLibrary.remove(classics);
+//Here's the methods in action. Note how The Odyssey was wrongly added to the
+//classic's shelf. Below the custom methods are used to fix the problem.
+
+
+mainStreetLibrary.remove(mystery);
+mystery.remove(odyssey);
+classics.add(odyssey,cart);
 
 spl.report();
